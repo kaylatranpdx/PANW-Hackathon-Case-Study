@@ -1,0 +1,138 @@
+.stApp {
+    background: linear-gradient(
+        to bottom,
+        #A9D8FF 0%,
+        #CDE9CC 50%,
+        #003F63 100% 
+    );
+    background-attachment: fixed;
+    color: #0C263B;
+}
+
+.hero-title {
+    font-size: 50px !important;
+    font-weight: 900 !important;
+    color: #0f3148 !important;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 30px;
+    line-height: 1.1;
+}
+
+.prompt-heading {
+    font-size: 22px !important;
+    font-weight: 600;
+    color: #002b40 !important;
+    display: block;
+}
+
+.prompt-text {
+    font-size: 18px !important;
+    color: #0B2B40;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.entry-response {
+    font-size: 16px !important;
+    
+}
+
+p, span {
+    font-size: 16px !important;
+    color: #09344D;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+h1, h2, h3 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 30px;
+    justify-content: center;
+}
+
+.tab-heading {
+    font-size: 22px !important;
+    font-weight: 600;
+    color: #002b40 !important;
+    display: block;
+    text-align: center;
+}
+
+[data-testid="stAltairChart"] {
+    background: linear-gradient(
+        to bottom,
+        #A9D8FF 0%,
+        #CDE9CC 50%,
+        #003F63 100%
+    ) !important;
+    border-radius: 18px;
+    padding: 16px;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        to bottom,
+        #A9D8FF 0%,
+        #CDE9CC 50%,
+        #003F63 100%
+    ) !important;
+    color: #0B2B40 !important;
+    backdrop-filter: blur(6px);
+    min-width: 300px !important;
+    max-width: 300px !important;
+    width: 300px !important;
+
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    background: rgba(255,255,255,0.2) !important;
+    border-radius: 14px;
+    padding: 6px;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    font-weight: 700;
+}
+
+[data-testid="stSidebar"] .sidebar-entry {
+    color: #EAF9FF !important;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #0B2B40 !important;
+}
+
+.sidebar-heading {
+    font-size: 18px !important;
+    font-weight: 700;
+    color: #0B2B40 !important;
+    margin-bottom: 6px;
+    display: block;
+    text-align: center;
+}
+
+.stTextArea textarea,
+.stButton button,
+div[data-testid="stExpander"] {
+    background-color: #b8defc !important;
+    border-radius: 10px;
+    color: rgb(61, 86, 149) !important;
+    caret-color: black !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+}
+
+.stTextArea textarea::placeholder {
+    color: #0B2B40 !important;
+    font-style: italic;                 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0E577D;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #063A56;
+}

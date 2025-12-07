@@ -99,7 +99,7 @@ def generate_prompt_companion(last_entries: List[Dict]) -> str:
         "that helps the user reflect today. Do not give advice or try to solve problems, just suggest a prompt."
     )
     response = call_companion(user_prompt, max_tokens=80)
-    if response and response.startswith("Companion"):
+    if response and not response.startswith("Companion"):
         return response.strip()
     
     return generate_prompt_rule(last_entries)

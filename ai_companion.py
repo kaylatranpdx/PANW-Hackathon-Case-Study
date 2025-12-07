@@ -1,6 +1,6 @@
 import json, time
 import os
-from typing import Optional
+from typing import Optional, Dict, List
 from functools import lru_cache
 from dotenv import load_dotenv
 
@@ -15,7 +15,7 @@ BEDROCK_MODEL_ID = ("arn:aws:bedrock:us-east-1:862567259910:inference-profile/us
 _bedrock_client = None
 
 _last_call_time: float = 0.0
-rate_limit_secs: int = 30
+rate_limit_secs: int = 3
 
 SYSTEM_PROMPT = """
 You are an empathetic, private, and emotionally intelligent journaling companion.
@@ -77,6 +77,12 @@ def _call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
                 {
                     "role": "user",
                     "content": [
+                        {"type": "text", "text": SYSTEM_PROMPT}
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
                         {"type": "text", "text": user_prompt}
                     ]
                 },
@@ -94,10 +100,15 @@ def _call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
         )
 
         payload = json.loads(response["body"].read())
-        content = payload.get("content", [])
+        #content = payload.get("content", [])
 
-        if content and content[0].get("type") == "text":
-            return content[0]["text"].strip()
+        #if content and content[0].get("type") == "text":
+           #return content[0]["text"].strip()
+
+        if "content" in payload and payload["content"]:
+            for block in payload["content"]:
+                if block.get("type") == "text":
+                    return block["text"].strip()
         
         print("Claude response missing text content", payload)
         return None
@@ -116,10 +127,36 @@ def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
     if not has_claude():
         print("Claude not available")
         return None
-    
-    now = time.time()
-    if now - _last_call_time < rate_limit_secs:
-        return "Companion is taking a breather. Please try again later."
-    _last_call_time = now
+
     return _cache_companion_call(user_prompt, max_tokens)
+
+def generate_companion_response(entry: Dict) -> Optional[str]:
+    if not has_claude():
+        return None
+    
+    text = entry.get("text", "")
+    sentiment = entry.get("sentiment_label", "neutral")
+    themes = ", ".join(entry.get("themes", [])) if entry.get("themes") else "General"
+    created_at = entry.get("created_at", "today")
+
+    user_prompt = f"""
+You are an empathetic journaling companion. This user has just written a journal entry.:
+Date: {created_at}
+Themes: {themes}
+Mood: {sentiment}
+Entry: 
+{text}
+
+Please provide a warm, validating, and gentle response (under 150 words):
+- Validate their experience and emotions.
+- Acknowledge their feelings and reflects on the themes they mentioned. 
+- Do not give advice or try to solve problems, just offer compassionate companionship.
+- Keep it warm and converational, not formal or clinical.
+    """.strip()
+
+    response = call_companion(user_prompt, max_tokens=220)
+    if response and not response.startswith("Companion"):
+        return response.strip()
+    
+    return None
 

@@ -4,49 +4,65 @@ import streamlit as st
 from database import load_entries, save_entry
 from nlp import generate_prompt
 from summary import generate_weekly_summary
-from ai_companion import has_claude
+from ai_companion import has_claude, generate_companion_response
+
+st.set_page_config(
+    page_title="AI Journaling Companion",
+    page_icon="🌊",
+    layout="wide",
+)
+
+with open("themes.css", "r", encoding="utf-8") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def main():
-    st.set_page_config(page_title="AI Journaling Companion", layout="wide")
-    st.title("Your Personal Journaling Companion")
-    
+    st.markdown("<div class='hero-title'>Your Personal Journaling Companion</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-title'>🫂</div>", unsafe_allow_html=True)
     tabs = st.tabs(["Daily Journal", "Trends", "Weekly Reflection"])
 
     with tabs[0]:
-        st.subheader("Your Daily Entry")
         recent_entries = load_entries(days=7)
         suggested_prompt = generate_prompt(recent_entries)
 
-        st.markdown("**Your Prompt for Today:**")
-        st.info(suggested_prompt)
+        st.markdown("<div class='prompt-heading'>Your Companion asks...</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='prompt-text'>{suggested_prompt}</div>", unsafe_allow_html=True)
 
-        text = st.text_area("Write how you're feeling today. Whether it's good or bad, there is no right or wrong way to express yourself: ", height=200)
+        text = st.text_area(
+            "Journal Entry",
+            placeholder="Write how you're feeling today. Whether it's good or bad, this is your safe space.",
+            height=200,
+            label_visibility="collapsed",
+        )
 
         if st.button("Save Entry"):
-            if text.strip():
-                save_entry(text)
-                st.success("Your entry has been saved.")
-            else:
+            if not text.strip():
                 st.warning("Think about what you want to write before saving.")
+            else:
+                save_entry(text)
+                entry_data = {"text": text}
+                ai_reply = generate_companion_response(entry_data)
+                
+                st.success("Your entry has been saved.")
+                if ai_reply:
+                    st.markdown("### Your Companion says:")
+                    st.markdown(f"<div class='entry-response'>{ai_reply}</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown("*Your companion is listening quietly with you.*")
 
-        if recent_entries:
-            st.markdown("**Recent Entries:**")
-            for entry in reversed(recent_entries[-5:]):
-                header = (
-                    f"{entry['created_at'][:10]} - "
-                    f"{', '.join(entry['themes']) or 'No Themes'} · "
-                    f"{entry['sentiment_label']}"
-                )
-                with st.expander(header):
-                    st.markdown("**Full Entry:**")
-                    st.write(entry["text"])
-                    st.caption(
-                        f"Sentiment Score: {entry['sentiment_score']:.2f}"
-                        f"({entry['sentiment_label']})"
+        with st.sidebar:
+            st.markdown("<div class='sidebar-heading'>Your Recent Entries</div>", unsafe_allow_html=True)
+
+            if recent_entries:
+                for e in reversed(recent_entries):
+                    header = (
+                        f"{e['created_at'][:10]} "
                     )
+
+                    with st.expander(header):
+                        st.markdown(f"<div class='entry-full'>{e['text']}</div>", unsafe_allow_html=True)
     
     with tabs[1]:
-        st.subheader("Emotional Trends")
+        st.markdown("<div class='tab-heading'>Your Emotional Trends</div>", unsafe_allow_html=True)
         entries = load_entries()
         if not entries:
             st.info("No entries yet, start journaling to see your shift in emotions over time.")
@@ -91,7 +107,7 @@ def main():
                 )
 
     with tabs[2]:
-        st.subheader("Our Weekly Catch Up")
+        st.markdown("<div class='tab-heading'>Our Weekly Catch Up</div>", unsafe_allow_html=True)
         week_entries = load_entries(days=7)
 
         if not week_entries:
@@ -99,5 +115,6 @@ def main():
         else:
             summary_text = generate_weekly_summary(week_entries)
             st.markdown(summary_text)
+
 if __name__ == "__main__":
     main()
