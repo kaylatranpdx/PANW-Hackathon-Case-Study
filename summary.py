@@ -75,7 +75,7 @@ def generate_weekly_summary_companion(entries: List[Dict]) -> str:
     bullets = []
     for entry in entries[-10:]:
         bullets.append(
-            f"- {entry['created at'][:10]}: mood{entry['sentiment_label']}, "
+            f"- {entry['created_at'][:10]}: mood{entry['sentiment_label']}, "
             f"themes: {', '.join(entry['themes'])}"
         )
     user_prompt = (
@@ -87,8 +87,8 @@ def generate_weekly_summary_companion(entries: List[Dict]) -> str:
     )
 
     response = call_companion(user_prompt, max_tokens=300)
-    if response:
-        return response
+    if response and not response.startswith("Companion"):
+        return response.strip()
     
     return generate_weekly_summary_rule(entries)
 

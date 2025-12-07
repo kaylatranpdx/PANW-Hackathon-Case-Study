@@ -1,6 +1,7 @@
-import json
+import json, time
 import os
 from typing import Optional
+from functools import lru_cache
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +13,9 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 BEDROCK_MODEL_ID = ("arn:aws:bedrock:us-east-1:862567259910:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0")
 
 _bedrock_client = None
+
+_last_call_time: float = 0.0
+rate_limit_secs: int = 30
 
 SYSTEM_PROMPT = """
 You are an empathetic, private, and emotionally intelligent journaling companion.
@@ -60,7 +64,7 @@ def has_claude() -> bool:
     except Exception:
         return False
 
-def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
+def _call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
     if not has_claude():
         print("Claude not available")
         return None
@@ -101,6 +105,21 @@ def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
     except Exception as e:
         print("Claude error:", e)
         return None
-        
 
+@lru_cache(maxsize=32)
+def _cache_companion_call(prompt: str, max_tokens: int = 250) -> Optional[str]:
+    return _call_companion(prompt, max_tokens)
+
+def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
+    global _last_call_time
+
+    if not has_claude():
+        print("Claude not available")
+        return None
+    
+    now = time.time()
+    if now - _last_call_time < rate_limit_secs:
+        return "Companion is taking a breather. Please try again later."
+    _last_call_time = now
+    return _cache_companion_call(user_prompt, max_tokens)
 

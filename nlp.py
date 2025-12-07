@@ -1,3 +1,4 @@
+import re
 from typing import List, Dict, Tuple
 from transformers import pipeline
 from ai_companion import has_claude, call_companion
@@ -30,9 +31,11 @@ def compute_sentiment(text: str) -> Dict[float, str]:
         normal = -score
         sentiment_label = "negative"
 
-    if abs(normal) < 0.2:
-        normal = 0.0
+    neutral_threshold = 0.4
+
+    if abs(normal) < neutral_threshold:
         sentiment_label = "neutral"
+        normal = 0.0
 
     return normal, sentiment_label
 
@@ -46,7 +49,7 @@ THEME_KEYWORDS: Dict[str, List[str]] = {
 }
 
 def extract_themes(text: str) -> List[str]:
-    tokens = set(text.lower().split())
+    tokens = set(re.findall(r"\w+", text.lower()))
     themes: List[str] = []
 
     for theme, keywords in THEME_KEYWORDS.items():
@@ -85,7 +88,7 @@ def generate_prompt_companion(last_entries: List[Dict]) -> str:
         bullets = []
         for entry in last_entries[-3:]:
             bullets.append(
-                f"- {entry['created at'][:10]}: mood{entry['sentiment_label']}, "
+                f"- {entry['created_at'][:10]}: mood{entry['sentiment_label']}, "
                 f"themes: {', '.join(entry['themes'])}"
             )
 
@@ -95,9 +98,9 @@ def generate_prompt_companion(last_entries: List[Dict]) -> str:
         + "\n\nBased on this, suggest ONE gentle journaling prompt (<= 30 words) "
         "that helps the user reflect today. Do not give advice or try to solve problems, just suggest a prompt."
     )
-    response = call_companion(user_prompt)
-    if response:
-        return response
+    response = call_companion(user_prompt, max_tokens=80)
+    if response and response.startswith("Companion"):
+        return response.strip()
     
     return generate_prompt_rule(last_entries)
 
