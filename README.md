@@ -1,1 +1,1 @@
-# PANW-Hackathon-Case-Study
+# PANW Hackathon Case Study
