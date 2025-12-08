@@ -1,3 +1,5 @@
+# this file is the main ui app file, using streamlit
+#each part of main is separated by tabs: Daily Journal, Trends, Weekly Reflection
 import pandas as pd
 import streamlit as st
 
@@ -38,28 +40,51 @@ def main():
             if not text.strip():
                 st.warning("Think about what you want to write before saving.")
             else:
-                save_entry(text)
                 entry_data = {"text": text}
                 ai_reply = generate_companion_response(entry_data)
+                save_entry(text, prompt=suggested_prompt, ai_reply=ai_reply)
                 
                 st.success("Your entry has been saved.")
+
                 if ai_reply:
                     st.markdown("### Your Companion says:")
                     st.markdown(f"<div class='entry-response'>{ai_reply}</div>", unsafe_allow_html=True)
                 else:
                     st.markdown("*Your companion is listening quietly with you.*")
 
+        recent_entries = load_entries(days=7)
         with st.sidebar:
-            st.markdown("<div class='sidebar-heading'>Your Recent Entries</div>", unsafe_allow_html=True)
+            st.markdown("<div class='sidebar-heading'>Recent Entries</div>", unsafe_allow_html=True)
 
             if recent_entries:
-                for e in reversed(recent_entries):
-                    header = (
-                        f"{e['created_at'][:10]} "
-                    )
+                for entry in reversed(recent_entries):
+                    themes_raw = entry.get("themes", []) or []
+                    if isinstance(themes_raw, str):
+                        themes_list = [themes_raw]
+                    else:
+                        try:
+                            themes_list = list(themes_raw)
+                        except TypeError:
+                            themes_list = []
+
+                    themes_display = ", ".join(str(t).strip() for t in themes_list if t) or "No themes"
+
+                    sentiment = entry.get("sentiment_label") or "neutral"
+                    sentiment_display = str(sentiment).title()
+
+                    header = f"{entry['created_at'][:10]} — {themes_display} · {sentiment_display}"
 
                     with st.expander(header):
-                        st.markdown(f"<div class='entry-full'>{e['text']}</div>", unsafe_allow_html=True)
+                        if entry.get("prompt"):
+                            st.markdown("**Prompt:**")
+                            st.markdown(f"<div class='prompt-box'>{entry['prompt']}</div>", unsafe_allow_html=True)
+
+                        st.markdown("**Your Entry:**")
+                        st.markdown(f"<div class='entry-response'>{entry['text']}</div>", unsafe_allow_html=True)
+
+                        if entry.get("ai_reply"):
+                            st.markdown("**Companion's Response:**")
+                            st.markdown(f"<div class='entry-response'>{entry['ai_reply']}</div>", unsafe_allow_html=True)        
     
     with tabs[1]:
         st.markdown("<div class='tab-heading'>Your Emotional Trends</div>", unsafe_allow_html=True)

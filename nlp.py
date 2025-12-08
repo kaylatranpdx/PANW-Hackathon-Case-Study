@@ -1,3 +1,4 @@
+# this is the nlp file where we handle sentiment analysis and theme extraction
 import re
 from typing import List, Dict, Tuple
 from transformers import pipeline
@@ -5,6 +6,7 @@ from ai_companion import has_claude, call_companion
 
 _sentiment_pipe = None
 
+# Get or create the sentiment analysis pipeline
 def get_sentiment_pipeline():
     global _sentiment_pipe
     if _sentiment_pipe is None:
@@ -14,6 +16,7 @@ def get_sentiment_pipeline():
         )
     return _sentiment_pipe
 
+# Compute sentiment score and label for a given text
 def compute_sentiment(text: str) -> Dict[float, str]:
     if not text.strip():
         return 0.0, "neutral"
@@ -39,6 +42,7 @@ def compute_sentiment(text: str) -> Dict[float, str]:
 
     return normal, sentiment_label
 
+# Simple theme extraction based on keyword matching
 THEME_KEYWORDS: Dict[str, List[str]] = {
     "Work": ["work", "job", "career", "office", "boss", "colleague", "project", "meeting", "deadline", "email"],
     "Family": ["family", "mother", "father", "sister", "brother", "child", "parent", "home", "relatives", "household"],
@@ -48,6 +52,7 @@ THEME_KEYWORDS: Dict[str, List[str]] = {
     "Mood": ["happy", "sad", "angry", "excited", "depressed", "anxious", "joyful", "frustrated", "content", "bored", "calm", "lonely", "stressed"],
 }
 
+# Extract themes from the text based on keyword presence
 def extract_themes(text: str) -> List[str]:
     tokens = set(re.findall(r"\w+", text.lower()))
     themes: List[str] = []
@@ -58,6 +63,7 @@ def extract_themes(text: str) -> List[str]:
 
     return themes or ["General"]
 
+# Generate a brief summary of themes and sentiments from entries, rule based if no companion available
 def generate_prompt_rule(last_entries: List[Dict]) -> str:
     if not last_entries:
         return "What is one thing on your mind right now?"
@@ -77,6 +83,7 @@ def generate_prompt_rule(last_entries: List[Dict]) -> str:
     
     return "Let's take a deep breath and pause. What is the strongest feeling you feel right now?"
 
+# Generate a journaling prompt using the AI companion if available
 def generate_prompt_companion(last_entries: List[Dict]) -> str:
     if not has_claude():
         return generate_prompt_rule(last_entries)
@@ -104,6 +111,7 @@ def generate_prompt_companion(last_entries: List[Dict]) -> str:
     
     return generate_prompt_rule(last_entries)
 
+# Generate a journaling prompt, using AI companion if available
 def generate_prompt(last_entries: List[Dict]) -> str:
     if has_claude():
         return generate_prompt_companion(last_entries)

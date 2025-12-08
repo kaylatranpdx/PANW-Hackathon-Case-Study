@@ -1,3 +1,4 @@
+# this file is meant to connect claude model via aws bedrock
 import json, time
 import os
 from typing import Optional, Dict, List
@@ -14,9 +15,11 @@ BEDROCK_MODEL_ID = ("arn:aws:bedrock:us-east-1:862567259910:inference-profile/us
 
 _bedrock_client = None
 
+# rate limiting variables to avoid throttling
 _last_call_time: float = 0.0
 rate_limit_secs: int = 3
 
+# system prompt for the journaling companion
 SYSTEM_PROMPT = """
 You are an empathetic, private, and emotionally intelligent journaling companion.
 
@@ -44,6 +47,7 @@ Daily Prompts Rules:
 • Encourage awareness — not solutions or advice.
 """
 
+# Get or create the Bedrock client
 def get_bedrock_client():
     global _bedrock_client
     if _bedrock_client is None:
@@ -53,6 +57,7 @@ def get_bedrock_client():
         )
     return _bedrock_client
 
+# Check if Claude model is available
 def has_claude() -> bool:
     if not BEDROCK_MODEL_ID:
         return False
@@ -64,6 +69,7 @@ def has_claude() -> bool:
     except Exception:
         return False
 
+# Call the Claude model via Bedrock
 def _call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
     if not has_claude():
         print("Claude not available")
@@ -117,10 +123,12 @@ def _call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
         print("Claude error:", e)
         return None
 
+#caching companion calls to avoid rate limits
 @lru_cache(maxsize=32)
 def _cache_companion_call(prompt: str, max_tokens: int = 250) -> Optional[str]:
     return _call_companion(prompt, max_tokens)
 
+# Public function to call the companion model
 def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
     global _last_call_time
 
@@ -130,6 +138,7 @@ def call_companion(user_prompt: str, max_tokens: int = 250) -> Optional[str]:
 
     return _cache_companion_call(user_prompt, max_tokens)
 
+# Generate companion response to a journal entry
 def generate_companion_response(entry: Dict) -> Optional[str]:
     if not has_claude():
         return None

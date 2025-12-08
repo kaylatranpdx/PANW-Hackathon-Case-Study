@@ -34,9 +34,15 @@
     margin-bottom: 20px;
 }
 
-.entry-response {
-    font-size: 16px !important;
+.prompt-box {
+    font-size: 14px !important;
+    color: #0B2B40 !important;
+    margin-bottom: 4px;
+}
 
+.entry-response {
+    color: #0B2B40 !important;
+    font-size: 14px !important;
 }
 
 p, span {

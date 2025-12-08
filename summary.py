@@ -1,7 +1,9 @@
+# this file generates a weekly summary of journal entries
 from collections import Counter
 from typing import List, Dict
 from ai_companion import has_claude, call_companion
 
+# Generate a brief summary of themes and sentiments from entries, rule based if no companion available
 def generate_weekly_summary_rule(entries: List[Dict]) -> str:
     if not entries:
         return (
@@ -65,6 +67,7 @@ def generate_weekly_summary_rule(entries: List[Dict]) -> str:
 
     return "\n\n".join(lines)
 
+# Generate a weekly summary using the AI companion if available
 def generate_weekly_summary_companion(entries: List[Dict]) -> str:
     if not entries:
         return (
@@ -92,6 +95,7 @@ def generate_weekly_summary_companion(entries: List[Dict]) -> str:
     
     return generate_weekly_summary_rule(entries)
 
+# Public function to generate weekly summary
 def generate_weekly_summary(entries: List[Dict]) -> str:
     if has_claude():
         return generate_weekly_summary_companion(entries)
